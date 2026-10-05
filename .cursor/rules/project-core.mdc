@@ -1,0 +1,14 @@
+---
+description: MyNoteTaking layout, commands, and agent boundaries
+alwaysApply: true
+---
+
+# MyNoteTaking core
+
+- Flask app entry: `src/main.py` (port **5001**, host `0.0.0.0`).
+- SQLite: `database/app.db` at repo root (not under `src/`).
+- UI is a single file: `src/static/index.html` — no npm/vite pipeline.
+- Primary API: `/api/notes*`; user routes are template-only.
+- Imports use `src.*` with repo root on `sys.path` — do not remove the path bootstrap in `main.py`.
+- Read `AGENTS.md` for API table, git remotes (fork vs upstream), and verification steps.
+- Minimize diff scope; do not commit unless the user requests it; never commit `.env` or `*.db`.

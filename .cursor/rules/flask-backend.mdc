@@ -1,0 +1,14 @@
+---
+description: Flask/SQLAlchemy patterns for this repo
+globs: src/**/*.py
+alwaysApply: false
+---
+
+# Flask backend
+
+- Blueprints live in `src/routes/`; register in `main.py` with prefix `/api`.
+- Shared `db` instance: `from src.models.user import db`.
+- Models implement `to_dict()` for JSON responses; use `jsonify` in routes.
+- Mutations: `try` / `db.session.commit()` / `except` with `rollback()` and 500 JSON error (see `note.py`).
+- List endpoints: order notes by `updated_at.desc()` unless requirements say otherwise.
+- Avoid hardcoding new secrets in `app.config`; prefer env vars for production hardening.
