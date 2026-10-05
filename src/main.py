@@ -3,10 +3,14 @@ import sys
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from dotenv import load_dotenv
-
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-load_dotenv(os.path.join(ROOT_DIR, ".env"))
+_env_file = os.path.join(ROOT_DIR, ".env")
+if os.path.isfile(_env_file):
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(_env_file)
+    except ImportError:
+        pass
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
