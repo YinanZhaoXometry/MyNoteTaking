@@ -3,6 +3,11 @@ import sys
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+from dotenv import load_dotenv
+
+ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+load_dotenv(os.path.join(ROOT_DIR, ".env"))
+
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from src.models.user import db
@@ -11,7 +16,7 @@ from src.routes.note import note_bp
 from src.models.note import Note
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'asdf#FGSgvasgf$5$WGT')
 
 # Enable CORS for all routes
 CORS(app)
@@ -19,13 +24,25 @@ CORS(app)
 # register blueprints
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(note_bp, url_prefix='/api')
-# configure database to use repository-root `database/app.db`
-ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-DB_PATH = os.path.join(ROOT_DIR, 'database', 'app.db')
-# ensure database directory exists
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH}"
+
+def _database_uri() -> str:
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        if database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+        if database_url.startswith("postgresql://") and "+psycopg2" not in database_url:
+            database_url = database_url.replace(
+                "postgresql://", "postgresql+psycopg2://", 1
+            )
+        return database_url
+
+    db_path = os.path.join(ROOT_DIR, 'database', 'app.db')
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    return f"sqlite:///{db_path}"
+
+
+app.config['SQLALCHEMY_DATABASE_URI'] = _database_uri()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 with app.app_context():

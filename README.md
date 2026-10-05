@@ -12,10 +12,13 @@ A modern, responsive web application for managing personal notes with a beautifu
 - **Responsive Design**: Works perfectly on desktop and mobile devices
 - **Modern UI**: Beautiful gradient design with smooth animations
 - **Real-time Updates**: Instant feedback and updates
+- **LLM Translation**: Translate note title and content via OpenRouter (Nemotron free model)
 
 ## 🚀 Live Demo
 
-The application is deployed and accessible at: **https://3dhkilc88dkk.manus.space**
+The application is deployed on Vercel at: **https://mynotetaking.vercel.app**
+
+(Screenshot with translation UI: [docs/screenshot-translation.png](docs/screenshot-translation.png))
 
 ## 🛠 Technology Stack
 
@@ -30,12 +33,18 @@ The application is deployed and accessible at: **https://3dhkilc88dkk.manus.spac
 - **Flask-CORS**: Cross-origin resource sharing support
 
 ### Database
-- **SQLite**: Lightweight, file-based database for data persistence
+- **SQLite** (local dev when `DATABASE_URL` is unset)
+- **Neon Postgres** (production on Vercel via `DATABASE_URL`)
+
+### AI
+- **OpenRouter** with model `nvidia/nemotron-3-ultra-550b-a55b:free`
 
 ## 📁 Project Structure
 
 ```
-notetaking-app/
+MyNoteTaking/
+├── database/
+│   └── app.db               # SQLite database (created at runtime)
 ├── src/
 │   ├── models/
 │   │   ├── user.py          # User model (template)
@@ -44,15 +53,17 @@ notetaking-app/
 │   │   ├── user.py          # User API routes (template)
 │   │   └── note.py          # Note API endpoints
 │   ├── static/
-│   │   ├── index.html       # Frontend application
-│   │   └── favicon.ico      # Application icon
-│   ├── database/
-│   │   └── app.db           # SQLite database file
+│   │   └── index.html       # Frontend application
 │   └── main.py              # Flask application entry point
-├── venv/                    # Python virtual environment
+├── AGENTS.md                # Guide for AI coding agents
+├── Makefile                 # install / dev / verify shortcuts
 ├── requirements.txt         # Python dependencies
-└── README.md               # This file
+└── README.md                # This file
 ```
+
+## 🤖 AI assistants
+
+See **[AGENTS.md](./AGENTS.md)** for architecture, API contracts, conventions, and verification commands used by Cursor and other agents.
 
 ## 🔧 Local Development Setup
 
@@ -74,17 +85,23 @@ notetaking-app/
 
    Remark: On Windows, use `venv\Scripts\activate`
 
-3. **Install dependencies**
+3. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env: set OPENROUTER_API_KEY (required for translation)
+   ```
+
+4. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Run the application**
+5. **Run the application**
    ```bash
    python src/main.py
    ```
 
-5. **Access the application**
+6. **Access the application**
    - Open your browser and go to `http://localhost:5001`
 
 ## 📡 API Endpoints
@@ -96,6 +113,7 @@ notetaking-app/
 - `PUT /api/notes/<id>` - Update a note
 - `DELETE /api/notes/<id>` - Delete a note
 - `GET /api/notes/search?q=<query>` - Search notes
+- `POST /api/notes/translate` - Translate title and content (`target_language`, `title`, `content`)
 
 ### Request/Response Format
 ```json
@@ -143,24 +161,25 @@ CREATE TABLE note (
 );
 ```
 
-## 🚀 Deployment
+## 🚀 Deployment (Vercel + Neon)
 
-The application is configured for easy deployment with:
-- CORS enabled for cross-origin requests
-- Host binding to `0.0.0.0` for external access
-- Production-ready Flask configuration
-- Persistent SQLite database
+1. Create a [Neon](https://neon.tech) Postgres database and copy `DATABASE_URL`.
+2. Import the GitHub repo in [Vercel](https://vercel.com) (Flask is auto-detected via `src/main.py`).
+3. Set environment variables in the Vercel project:
+   - `DATABASE_URL` — Neon connection string
+   - `OPENROUTER_API_KEY` — OpenRouter API key
+   - `OPENROUTER_MODEL` — `nvidia/nemotron-3-ultra-550b-a55b:free`
+   - `SECRET_KEY` — random production secret
+4. Deploy; `vercel.json` sets `maxDuration: 60` for translation requests.
 
 ## 🔧 Configuration
 
 ### Environment Variables
-- `FLASK_ENV`: Set to `development` for debug mode
-- `SECRET_KEY`: Flask secret key for sessions
-
-### Database Configuration
-- Database file: `src/database/app.db`
-- Automatic table creation on first run
-- SQLAlchemy ORM for database operations
+See `.env.example`. Key variables:
+- `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` — translation
+- `DATABASE_URL` — Neon Postgres (omit locally for SQLite at `database/app.db`)
+- `SECRET_KEY` — Flask secret
+- `FLASK_ENV` — `development` for local debug
 
 ## 📱 Browser Compatibility
 

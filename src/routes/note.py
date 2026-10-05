@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from src.models.note import Note, db
+from src.services.translation import TranslationError, translate_note
 
 note_bp = Blueprint('note', __name__)
 
@@ -60,6 +61,29 @@ def delete_note(note_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+@note_bp.route('/notes/translate', methods=['POST'])
+def translate_note_endpoint():
+    """Translate note title and content via OpenRouter."""
+    data = request.json
+    if not data:
+        return jsonify({'error': 'JSON body required'}), 400
+
+    title = data.get('title', '')
+    content = data.get('content', '')
+    target_language = (data.get('target_language') or '').strip()
+
+    if not target_language:
+        return jsonify({'error': 'target_language is required'}), 400
+    if not title and not content:
+        return jsonify({'error': 'Title or content is required to translate'}), 400
+
+    try:
+        result = translate_note(title, content, target_language)
+        return jsonify(result)
+    except TranslationError as exc:
+        return jsonify({'error': str(exc)}), exc.status_code
+
 
 @note_bp.route('/notes/search', methods=['GET'])
 def search_notes():
