@@ -172,6 +172,8 @@ CREATE TABLE note (
    - `SECRET_KEY` — random production secret
 4. Deploy; `vercel.json` sets `maxDuration: 60` for translation requests.
 
+**CI deploy (optional):** Add GitHub repository secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, then re-run the **Deploy to Vercel** workflow. Create a token at [vercel.com/account/tokens](https://vercel.com/account/tokens).
+
 ## 🔧 Configuration
 
 ### Environment Variables
